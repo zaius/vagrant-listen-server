@@ -5,7 +5,7 @@ require 'vagrant-listen-server/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'vagrant-listen-server'
-  spec.version       = Vagrant::ListenServer::VERSION
+  spec.version       = VagrantPlugins::ListenServer::VERSION
   spec.authors       = ['David Kelso']
   spec.email         = ['david@kelso.id.au']
   spec.summary       = %q{Guard / Listen TCP server to publich filesystem events to guests.}

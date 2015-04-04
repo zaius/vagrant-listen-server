@@ -1,4 +1,4 @@
-module Vagrant
+module VagrantPlugins
   module ListenServer
     class Plugin < Vagrant.plugin('2')
       name 'ListenServer'

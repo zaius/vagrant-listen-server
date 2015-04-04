@@ -1,31 +1,25 @@
-# Vagrant::Listen::Server
+# vagrant-listen-server
 
-TODO: Write a gem description
+Forward filesystem events from a host to a client
 
-## Installation
+To develop locally
+```
+bundle cache
+gem build vagrant-listen-server.gemspec
+mv vagrant-listen-server-0.0.1.gem vendor/cache
+cd vendor/cache
+gem generate_index
+vagrant plugin install vagrant-listen-server --plugin-source file://`pwd`
 
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'vagrant-listen-server'
+# This seems to work just fine...
+vagrant plugin install vagrant-listen-server-0.0.1.gem
 ```
 
-And then execute:
+Other good vagrant plugins used for reference:
+* https://github.com/mitchellh/vagrant-aws/blob/master/Rakefile
+* vagrant-ls - http://www.noppanit.com/create-simple-vagrant-plugin/
 
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install vagrant-listen-server
 
 ## Usage
 
-TODO: Write usage instructions here
-
-## Contributing
-
-1. Fork it ( https://github.com/[my-github-username]/vagrant-listen-server/fork )
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create a new Pull Request
+`vagrant plugin install vagrant-listen-server`
