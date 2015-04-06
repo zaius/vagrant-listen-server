@@ -1,6 +1,5 @@
 require 'vagrant-listen-server/version'
 require 'vagrant-listen-server/plugin'
-require 'vagrant-listen-server/command'
 
 module VagrantPlugins
   module ListenServer
