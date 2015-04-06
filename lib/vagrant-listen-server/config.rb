@@ -1,14 +1,9 @@
 module VagrantPlugins
   module ListenServer
     class Config < Vagrant.plugin('2', :config)
+      attr_accessor :ip
       attr_accessor :port
-
-      def initialize
-        @port = 4000
-      end
-
-      def finalize!
-      end
+      attr_accessor :folders
     end
   end
 end
