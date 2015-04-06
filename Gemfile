@@ -6,4 +6,7 @@ end
 
 group :plugins do
   gem 'vagrant-listen-server', path: '.'
+  gem 'listen'
+  gem 'celluloid'
+  gem 'celluloid-io'
 end
