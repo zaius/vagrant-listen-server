@@ -1,6 +1,18 @@
 require 'celluloid'
 require 'listen'
 
+# No ActiveSupport in vagrant
+def array_wrap object
+  if object.nil?
+    []
+  elsif object.respond_to?(:to_ary)
+    object.to_ary || [object]
+  else
+    [object]
+  end
+end
+
+
 module VagrantPlugins
   module ListenServer
     module Action
@@ -15,7 +27,7 @@ module VagrantPlugins
           @machine = env[:machine]
 
           config = @machine.config.listen_server
-          folders = config.folders
+          folders = array_wrap config.folders
           host = "#{config.ip}:#{config.port}"
 
           @ui.info "Starting listen server - #{host}"
@@ -28,7 +40,7 @@ module VagrantPlugins
               @ui.info 'Warning - listen server already running'
               return @app.call(env)
             rescue Errno::ESRCH
-              @ui.info 'Warning - stale PID file'
+              @ui.info "Warning - stale PID: #{pid}"
             end
           end
 
@@ -40,7 +52,7 @@ module VagrantPlugins
           # machine to test it out on...
           pid = fork do
             $0 = "vagrant-listen-server - #{@machine.name}"
-            listener = Listen.to folders, forward_to: host do |modified, added, removed|
+            listener = Listen.to *folders, forward_to: host do |modified, added, removed|
               File.open('/tmp/listen.txt', 'a+') do |f|
                 f.puts 'listen fired', modified, added, removed
               end
