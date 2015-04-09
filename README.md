@@ -64,7 +64,7 @@ Then in your Vagrantfile:
 
 Filesystem is shared using rsync-auto protocol instead of vboxsf
 
- * [rsync-mirror](https://github.com/ingenerator/vagrant-mirror/)
+ * [vagrant-mirror](https://github.com/ingenerator/vagrant-mirror/)
 
 Hasn't been updated to work with vagrant's new plugin system.
 
@@ -90,3 +90,19 @@ Listen maybe is a bit of a resource hog:
 
 There might be some better, native implementations that make this faster. e.g.
  * https://fsnotify.org/
+
+Gemspecs don't allow platform specific requirements, so we have to include all
+the gems for filesystem events. It looks like the only great solution to this
+is to switch to a separate gem for each platform...
+ * http://stackoverflow.com/questions/8940271/build-a-ruby-gem-and-conditionally-specify-dependencies
+
+You can automate the install pretty easily though:
+ * http://stackoverflow.com/questions/4596606/rubygems-how-do-i-add-platform-specific-dependency/10249133#10249133
+ * http://en.wikibooks.org/wiki/Ruby_Programming/RubyGems#How_to_install_different_versions_of_gems_depending_on_which_version_of_ruby_the_installee_is_using
+
+Fork in a way that will work with windows. Childprocess gem is included with
+vagrant by default - see if it will fit the bill.
+ * https://github.com/jarib/childprocess
+
+There's also a "subprocess" module under vagrant util
+ * https://github.com/mitchellh/vagrant/blob/master/lib/vagrant/util/subprocess.rb

@@ -1,5 +1,14 @@
 require_relative 'action'
 
+require 'rbconfig'
+os = RbConfig::CONFIG['target_os']
+
+require 'rb-fsevent' if os =~ /darwin/i
+require 'rb-kqueue' if os =~ /bsd|dragonfly/i
+require 'rb-inotify' if os =~ /linux/i
+require 'wdm' if Gem.win_platform?
+
+
 module VagrantPlugins
   module ListenServer
     class Plugin < Vagrant.plugin('2')
