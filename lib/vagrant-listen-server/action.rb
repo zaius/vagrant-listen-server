@@ -64,7 +64,16 @@ module VagrantPlugins
               @ui.info "Can't start server - Port in use"
               exit
             end
-            sleep
+
+            # Uhh... this needs work. Vagrant steals the interrupt from us and
+            # there's no way to get it back
+            #  * https://github.com/mitchellh/vagrant/blob/master/lib/vagrant/action/runner.rb#L49
+            # Is there a way to register more callbacks to the busy block?
+            #  * https://github.com/mitchellh/vagrant/blob/master/lib/vagrant/util/busy.rb
+            while not env[:interrupted]
+              sleep 1
+            end
+            @ui.info "Listen sleep finished"
           end
 
           Process.detach pid
