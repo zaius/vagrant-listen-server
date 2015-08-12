@@ -32,6 +32,10 @@ You can also write a simple server that touches all files on the guest, however
 you'll have to be aware of loops created if filesystem notifications are passed
 back from the guest to the host.
 
+See the [examples](/examples) section for some implementations. Currently there
+is solely my node based client, but if you're using this in any other
+languages, please add your client and submit a pull request!
+
 
 ## Usage
 
