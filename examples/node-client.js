@@ -37,14 +37,9 @@ client.connect(port, host, function() {
 });
 
 client.on('data', function(data) {
-  // Can't find any doc on the message format, but it looks like the first
-  // 4 bytes are always the header, which includes the message length, and
-  // the result is always a json array.
-  //  * https://github.com/guard/listen/blob/master/lib/listen/tcp/message.rb
-  var header = data.slice(0, 4);
-  var message = JSON.parse(data.slice(4).toString());
-  // message is [type, operation, dir, file, unknown]
-  console.log('Change detected in:', message[3])
+  // message is [modified, added, removed]
+  console.log('Data received', data)
+  var message = JSON.parse(data.toString().trim())
   scheduleBuild();
 });
 
