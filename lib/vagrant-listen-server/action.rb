@@ -1,5 +1,6 @@
-require 'celluloid'
 require 'listen'
+require 'socket'
+require 'json'
 
 # No ActiveSupport in vagrant
 def array_wrap object
@@ -28,9 +29,8 @@ module VagrantPlugins
 
           config = @machine.config.listen_server
           folders = array_wrap config.folders
-          host = "#{config.ip}:#{config.port}"
 
-          @ui.info "Starting listen server - #{host}"
+          @ui.info "Starting listen server - #{config.ip}:#{config.port}"
 
           # Check whether the daemon is already running.
           if File.exists? config.pid_file
@@ -52,18 +52,51 @@ module VagrantPlugins
           # machine to test it out on...
           pid = fork do
             $0 = "vagrant-listen-server - #{@machine.name}"
-            listener = Listen.to *folders, forward_to: host do |modified, added, removed|
-              File.open('/tmp/listen.txt', 'a+') do |f|
-                f.puts 'listen fired', modified, added, removed
+
+            clients = []
+            server = TCPServer.new config.ip, config.port
+
+            callback = Proc.new do |modified, added, removed|
+              bad_clients = []
+              # @ui.info "Listen fired - #{clients.count} clients.\n  #{modified}\n  #{added}\n  #{removed}"
+              clients.each do |client|
+                begin
+                  client.puts [modified, added, removed].to_json
+                rescue Errno::EPIPE
+                  @ui.info "Connection broke! #{client}"
+                  # Don't want to change the list of threads as we iterate.
+                  bad_clients.push client
+                end
+              end
+
+              bad_clients.each do |client|
+                clients.delete client
+              end
+            end
+            listener = Listen.to(*folders, &callback)
+            listener.start
+
+            # server.accept blocks - we need it in its own thread so we can
+            # continue to have listener callbacks fired, and so we can sleep
+            # and catch any interrupts from vagrant.
+            Thread.new do
+              loop do
+                Thread.fork(server.accept) do |client|
+                  @ui.info "New connection - #{client}"
+                  clients.push client
+                end
               end
             end
 
-            begin
-              listener.start
-            rescue Errno::EADDRNOTAVAIL
-              @ui.info "Can't start server - Port in use"
-              exit
-            end
+            # TODO: this error won't happen on the listen anymore - it will
+            # happen somewhere on the tcp call. Not sure where.
+            #
+            # begin
+            #   listener.start
+            # rescue Errno::EADDRNOTAVAIL
+            #   @ui.info "Can't start server - Port in use"
+            #   exit
+            # end
 
             # Uhh... this needs work. Vagrant steals the interrupt from us and
             # there's no way to get it back
