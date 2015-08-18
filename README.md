@@ -14,10 +14,9 @@ are impossible. Statting takes forever.
 Since polling implementations will probably rely on statting the file in some
 way, this creates a pretty awful experience.
 
-The best answer I've managed to find is forwarding filesystem events. The
-listen gem is already used by vagrant, (as part of rsync-auto) and allows
-forwarding of filesystem events over TCP, so that's what I've tried to stick
-with.
+I have tried to keep dependencies to a minimum and only rely on ruby stdlib and
+gems already required by vagrant. The listen gem is used by vagrant (as part
+of rsync-auto) so it is used for file system notifications.
 
 
 ## Clients
