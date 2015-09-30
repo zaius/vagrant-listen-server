@@ -17,9 +17,13 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ['lib']
 
+  # Shouldn't have to do this, but we want to make sure not to tie to an old
+  # version of listen and accidentally pull in the celluloid dependency.
+  spec.add_runtime_dependency 'listen', '~> 3.0', '>= 3.0.2'
+
+  spec.add_dependency 'rb-kqueue', '~> 0.2', '>= 0.2.3'
   spec.add_dependency 'rb-inotify', '~> 0.9', '>= 0.9.5'
   spec.add_dependency 'rb-fsevent', '~> 0.9', '>= 0.9.4'
-  spec.add_dependency 'rb-kqueue', '~> 0.2', '>= 0.2.3'
   # wdm is already included in the vagrant gem spec.
   # spec.add_runtime_dependency 'wdm', '~> 0.10', '>= 0.10.0'
 

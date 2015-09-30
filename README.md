@@ -77,7 +77,7 @@ Hasn't been updated to work with vagrant's new plugin system.
 To develop locally
 ```
 gem build vagrant-listen-server.gemspec
-vagrant plugin install vagrant-listen-server-0.0.1.gem
+vagrant plugin install vagrant-listen-server-*.gem
 ```
 
 Other good vagrant plugins used for reference:
