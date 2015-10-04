@@ -73,8 +73,16 @@ module VagrantPlugins
                 clients.delete client
               end
             end
-            listener = Listen.to(*folders, &callback)
-            listener.start
+
+            # There is a recurring bug that keeps popping up in listen where
+            # only the first directory is watched. Create a new listen object
+            # for each folder as a workaround.
+            # https://github.com/guard/listen/issues/243
+            listeners = folders.map do |folder|
+              Listen.to(folder, &callback)
+            end
+
+            listeners.each &:start
 
             # server.accept blocks - we need it in its own thread so we can
             # continue to have listener callbacks fired, and so we can sleep
@@ -106,6 +114,8 @@ module VagrantPlugins
             while not env[:interrupted]
               sleep 1
             end
+
+            listeners.each &:stop
             @ui.info "Listen sleep finished"
           end
 
