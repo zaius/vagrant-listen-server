@@ -23,6 +23,11 @@ module VagrantPlugins
         Config
       end
 
+      command :listen do
+        require_relative 'command'
+        Command
+      end
+
       action_hook(:listen_server, :machine_action_up) do |hook|
         hook.append(Action::StartServer)
       end
