@@ -58,12 +58,12 @@ module VagrantPlugins
 
             callback = Proc.new do |modified, added, removed|
               bad_clients = []
-              @ui.debug "Listen fired - #{clients.count} clients."
+              @ui.detail "Listen fired - #{clients.count} clients."
               clients.each do |client|
                 begin
                   client.puts [modified, added, removed].to_json
                 rescue Errno::EPIPE
-                  @ui.debug "Connection broke! #{client}"
+                  @ui.detail "Connection broke! #{client}"
                   # Don't want to change the list of threads as we iterate.
                   bad_clients.push client
                 end
@@ -82,7 +82,7 @@ module VagrantPlugins
             Thread.new do
               loop do
                 Thread.fork(server.accept) do |client|
-                  @ui.debug "New connection - #{client}"
+                  @ui.detail "New connection - #{client}"
                   clients.push client
                 end
               end
