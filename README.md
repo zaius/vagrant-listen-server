@@ -21,15 +21,18 @@ of rsync-auto) so it is used for file system notifications.
 
 ## Clients
 
-The main reason I developed this was to allow filesystem events to be pushed
-to a broccoli build pipeline.
+Clients should run inside the virtual machine as part of your build process.
+Instead of listenting for filesystem events, they should listen on a tcp
+connection.
 
-Ideally, you can subscribe to the file changes and trigger builds / whatever in
-your app
+The message format is a newline separated, json encoded array 3 arrays
+containing the full path of the files that are modified, added and removed (in
+that order). Listen coalesces events for us, so there is no need to do so in
+your client.
 
-You can also write a simple server that touches all files on the guest, however
-you'll have to be aware of loops created if filesystem notifications are passed
-back from the guest to the host.
+In many cases, a simple client that touches all modified files on the guest is
+sufficient, however you'll have to be aware of loops created if filesystem
+notifications are passed back from the guest to the host in any way.
 
 See the [examples](/examples) section for some implementations. Currently there
 is solely my node based client, but if you're using this in any other
