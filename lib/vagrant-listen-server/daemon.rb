@@ -21,7 +21,8 @@ module Daemon
 
     pid = File.read config.pid_file
     begin
-      return Process.getpgid pid.to_i
+      Process.getpgid pid.to_i
+      return pid.to_i
     rescue Errno::ESRCH
       return :stale
     end
@@ -34,6 +35,8 @@ module Daemon
     when Fixnum then log "Running - PID: #{code}"
     when :stopped then log 'Stopped'
     when :stale then log 'Stopped. Stale PID file.'
+    else
+      log "Unknown status - #{code}"
     end
   end
 
@@ -57,7 +60,7 @@ module Daemon
   # binary and make sure it's running the right file.
   def self.daemonize! out='/dev/null', err='/dev/null'
     raise 'First fork failed' if (pid = fork) == -1
-    exit unless pid.nil?
+    return nil unless pid.nil?
     Process.setsid
     raise 'Second fork failed' if (pid = fork) == -1
     exit unless pid.nil?
@@ -89,6 +92,9 @@ module Daemon
     # TODO: use machine name in log file name.
     # TODO: use machine name in PID file and drop it from config.
     pid = daemonize! '/tmp/listen.log', '/tmp/listen.log'
+    # Usually a daemon wants the parent to exit here, but we need vagrant to
+    # keep going with its init process.
+    return unless pid
 
     $0 = "vagrant-listen-server - #{vm.name}"
 
@@ -101,7 +107,7 @@ module Daemon
       server = TCPServer.new config.ip, config.port
     rescue Errno::EADDRINUSE
       log "Can't start server - Port in use"
-      return 1
+      exit 1
     end
 
     callback = Proc.new do |modified, added, removed|
