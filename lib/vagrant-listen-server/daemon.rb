@@ -9,12 +9,9 @@ def array_wrap object
 end
 
 
+# TODO: pre-fork use vagrant logging, post fork use puts.
 def log message
-  open('/tmp/listen.log', 'a') do |f|
-    f.sync = true
-    puts message
-    f.puts message
-  end
+  puts message
 end
 
 
@@ -24,8 +21,7 @@ module Daemon
 
     pid = File.read config.pid_file
     begin
-      Process.getpgid pid.to_i
-      return :running
+      return Process.getpgid pid.to_i
     rescue Errno::ESRCH
       return :stale
     end
@@ -33,8 +29,9 @@ module Daemon
   end
 
   def self.status config
-    case self.status_code config
-    when :running then log 'Running'
+    code = self.status_code config
+    case code
+    when Fixnum then log "Running - PID: #{code}"
     when :stopped then log 'Stopped'
     when :stale then log 'Stopped. Stale PID file.'
     end
@@ -89,17 +86,11 @@ module Daemon
 
     File.delete config.pid_file if status == :stale
 
-
-    log 'outside fork call - 1'
-    # Process.daemon false, false # nochdir=true, noclose=true
+    # TODO: use machine name in log file name.
+    # TODO: use machine name in PID file and drop it from config.
     pid = daemonize! '/tmp/listen.log', '/tmp/listen.log'
 
-    # TODO: have to pass the whole vm just to get the name?
-    # $0 = "vagrant-listen-server - #{@machine.name}"
-    $0 = "vagrant-listen-server"
-    $stdout.sync = $stderr.sync = true
-    log "inside fork call - 1 - PID #{pid}"
-    # Process.daemon # nochdir=true, noclose=true
+    $0 = "vagrant-listen-server - #{vm.name}"
 
     File.write config.pid_file, pid
 
@@ -110,7 +101,7 @@ module Daemon
       server = TCPServer.new config.ip, config.port
     rescue Errno::EADDRINUSE
       log "Can't start server - Port in use"
-      return false
+      return 1
     end
 
     callback = Proc.new do |modified, added, removed|
@@ -146,7 +137,7 @@ module Daemon
 
     # server.accept is blocking - we need it in its own thread so we can
     # continue to have listener callbacks fired, and so we can sleep and catch
-    # any interrupts from vagrant.
+    # any interrupts.
     Thread.new do
       loop do
         Thread.fork(server.accept) do |client|
@@ -156,14 +147,13 @@ module Daemon
       end
     end
 
-    # Uhh... this needs work. Vagrant steals the interrupt from us and
-    # there's no way to get it back
-    #  * https://github.com/mitchellh/vagrant/blob/master/lib/vagrant/action/runner.rb#L49
-    # Is there a way to register more callbacks to the busy block?
-    #  * https://github.com/mitchellh/vagrant/blob/master/lib/vagrant/util/busy.rb
-    while true # vm.env[:interrupted]
-      sleep 1
+    exiting = false
+    Signal.trap 'INT' do
+      log 'SIGINT caught'
+      exiting = true
     end
+
+    sleep 0.5 while not exiting
 
     listeners.each &:stop
     log "Listen sleep finished"
@@ -174,12 +164,13 @@ module Daemon
     log 'Killing listen server'
     config = vm.config.listen_server
     status = self.status_code config
-    if status != :running
+    unless status.is_a? Fixnum
       log 'Server is not running.'
       return 1
     end
 
     pid = File.read config.pid_file
     Process.kill 'INT', pid.to_i
+    File.delete config.pid_file
   end
 end
