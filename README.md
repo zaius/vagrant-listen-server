@@ -48,19 +48,29 @@ Install the plugin:
 Then in your Vagrantfile:
 
 ```ruby
-  config.vm.synced_folder '/host/code', '/client/code'
+config.vm.synced_folder '/host/code', '/client/code'
 
-  # You have to specify a private network for the guest to connect to.
-  config.vm.network :private_network, ip: '172.16.172.16'
+# You have to specify a private network for the guest to connect to.
+config.vm.network :private_network, ip: '172.16.172.16'
 
-  if Vagrant.has_plugin? 'vagrant-listen-server'
-    # The host will always be the same IP as the private network with the last
-    # octet as .1
-    config.listen_server.ip = '172.168.172.1'
-    config.listen_server.port = 4000
-    config.listen_server.folders = '/host/code'
-    config.listen_server.pid_file = '/tmp/servername.listen.pid'
-  end
+if Vagrant.has_plugin? 'vagrant-listen-server'
+  # The host will always be the same IP as the private network with the last
+  # octet as .1
+  config.listen_server.ip = '172.168.172.1'
+  config.listen_server.port = 4000
+  config.listen_server.folders = '/host/code'
+  config.listen_server.pid_file = '/tmp/servername.listen.pid'
+end
+```
+
+Because sleep states of both the host and guest machines can mess with long
+connections in unexpected ways, you can use the command to control the listen
+server.
+
+```bash
+vagrant listen stop
+vagrant listen start
+vagrant listen status
 ```
 
 

@@ -5,55 +5,30 @@ module VagrantPlugins
         "Check the status of the vagrant-listen server"
       end
 
-      def initialize(argv, env)
-        @argv = argv
-        @env  = env
-      end
-
       def execute
         opts = OptionParser.new do |o|
           o.banner = 'Usage: vagrant listen [start|stop|status]'
         end
-        argv = parse_options(opts)
 
-        exit 1 if not argv.count == 1
-        command = argv[0]
+        command = @argv.shift
+        argv = parse_options opts
 
-        case command
-        when 'status' then status
-        when 'stop' then stop
-        when 'start' then start
-        else
-          @ui.info 'Unknown command'
-          exit 1
+        with_target_vms nil, single_target: true do |vm|
+          # puts "ENV #{vm.env.inspect}"
+          # puts "CONFIG #{vm.config.inspect}"
+          # puts "LISTEN #{vm.config.listen_server.inspect}"
+
+          case command
+          when 'status' then Daemon.status vm.config.listen_server
+          when 'stop' then Daemon.stop vm
+          when 'start' then Daemon.start vm
+          else
+            puts 'Unknown command'
+            exit 1
+          end
         end
 
         0
-      end
-
-      def start
-        @logger.info 'Do something here'
-      end
-
-      def stop
-        @logger.info 'Stopping server'
-        @env[:interrupted] = true
-      end
-
-      def status
-        config = @env[:machine].config.listen_server
-        if File.exists? config.pid_file
-          pid = File.read config.pid_file
-          begin
-            Process.kill 0, pid.to_i
-            @ui.info "Server running - PID #{pid}"
-          rescue Errno::ESRCH
-            @ui.info 'Stale PID file - no server found'
-            File.delete config.pid_file
-          end
-        else
-          @ui.info 'No listen server found'
-        end
       end
     end
   end

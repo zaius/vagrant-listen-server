@@ -1,4 +1,5 @@
 require_relative 'action'
+require_relative 'daemon'
 
 require 'rbconfig'
 os = RbConfig::CONFIG['target_os']
