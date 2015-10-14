@@ -25,18 +25,43 @@ Clients should run inside the virtual machine as part of your build process.
 Instead of listenting for filesystem events, they should listen on a tcp
 connection.
 
-The message format is a newline separated, json encoded array 3 arrays
-containing the full path of the files that are modified, added and removed (in
-that order). Listen coalesces events for us, so there is no need to do so in
-your client.
+The message format is a newline separated, json encoded object with keys `type`
+and `data`. The two message types:
+
+**listen**
+
+    {"type": "listen", "data": [modified, added, removed]}
+
+data is an array of 3 arrays containing the full path of the files that are
+    modified, added and removed (in that order).
+
+**ping**
+
+    {"type": "ping", "data": "message to be echoed"}
+
+response will be of type "pong". Data will be echoed back to the client.
+
 
 In many cases, a simple client that touches all modified files on the guest is
 sufficient, however you'll have to be aware of loops created if filesystem
-notifications are passed back from the guest to the host in any way.
+notifications are passed back from the guest to the host in any way. Listen
+coalesces events for us, so there is no need to do so in your client.
 
 See the [examples](/examples) section for some implementations. Currently there
 is solely my node based client, but if you're using this in any other
 languages, please add your client and submit a pull request!
+
+
+## Keepalives
+
+Ideally, the client and server sockets would both support keepalives. But we
+can't rely on that working on both guest and host - windows has spotty support,
+and many languages don't give control over socket flags (it's awkward in ruby).
+Instead, the client can send a ping message to check the connection is alive.
+
+A simple client can safely ignore keepalive messages.
+
+http://www.tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/
 
 
 ## Usage

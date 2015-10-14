@@ -110,13 +110,13 @@ module Daemon
       exit 1
     end
 
-    callback = Proc.new do |modified, added, removed|
+    send_to_clients = Proc.new do |type, data|
       bad_clients = []
-      log "Listen fired - #{clients.count} clients."
+      log "Sending #{type} to #{clients.count} clients."
 
       clients.each do |client|
         begin
-          client.puts [modified, added, removed].to_json
+          client.puts ({type: type, data: data}).to_json
         rescue Errno::EPIPE
           log "Connection broke! #{client}"
           # Don't want to change the list of threads as we iterate.
@@ -127,6 +127,11 @@ module Daemon
       bad_clients.each do |client|
         clients.delete client
       end
+    end
+
+    callback = Proc.new do |modified, added, removed|
+      log "Listen fired"
+      send_to_clients.call :listen, [modified, added, removed]
     end
 
     folders = array_wrap config.folders
@@ -149,6 +154,15 @@ module Daemon
         Thread.fork(server.accept) do |client|
           log "New connection - #{client}"
           clients.push client
+
+          loop do
+            line = client.gets.chomp
+            # Currently, the only message type is a ping. Don't bother checking
+            # type for now.
+            data = JSON.parse line
+            log 'ping received'
+            client.puts ({type: 'pong', data: data['message']}).to_json
+          end
         end
       end
     end
@@ -159,7 +173,12 @@ module Daemon
       exiting = true
     end
 
-    sleep 0.5 while not exiting
+    while not exiting
+      # Original idea was to have the server ping. This requires more work on
+      # the client for a basic implementation though, so now the client pings.
+      # send_to_clients.call :echo, 'ping'
+      sleep 0.5
+    end
 
     listeners.each &:stop
     log "Listen sleep finished"
